@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.vivekghosh.springboottutorials.Exceptions.BlogAPIException;
@@ -27,6 +28,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	RoleRepository roleRepository;
+
+	@Autowired
+    private PasswordEncoder passwordEncoder;
 	
 	MappingEntities mappingEntities;
 	
@@ -59,14 +63,14 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDTO createUserProfile(UserDTO userDto) {
 		
-//		if(userRepository.existsByUserName(userDto.getUserName())) {
-//            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "User Name is already exists!.");
-//        }
-//
-//        // add check for email exists in database
-//        if(userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
-//            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email Address is already exists!.");
-//        }
+		if(userRepository.existsByUserName(userDto.getUserName())) {
+            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "User Name is already exists!.");
+        }
+
+        // add check for email exists in database
+        if(userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
+            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email Address is already exists!.");
+        }
         
 		// convert DTO to entity
 		UserProfile user = mappingEntities.mapToEntity(userDto);
@@ -76,10 +80,9 @@ public class UserServiceImpl implements UserService {
         roles.add(userRole);
         user.setRoles(roles);
         
-//        UserProfile newUser = userRepository.save(user);
+        UserProfile newUser = userRepository.save(user);
 
-//        return sendUserDTOResponse(newUser);
-        return sendUserDTOResponse(user);
+        return sendUserDTOResponse(newUser);
 	}
 
 	@Override
@@ -127,12 +130,29 @@ public class UserServiceImpl implements UserService {
 		// get post by id from the database
         UserProfile userProfile = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         
-        userProfile.setUserName(userDto.getUserName());
-        userProfile.setFullName(userDto.getFullName());
-        userProfile.setEmailAddress(userDto.getEmailAddress());
-        userProfile.setPhoneNumber(userDto.getPhoneNumber());
-        userProfile.setAadharNumber(userDto.getAadharNumber());
-        userProfile.setUserAddress(userDto.getUserAddress());
+        if (!checkBothFields(userProfile.getUserName(), userDto.getUserName()))
+        	userProfile.setUserName(userDto.getUserName());
+        
+        if (!checkBothFields(userProfile.getFullName(), userDto.getFullName()))
+        	userProfile.setFullName(userDto.getFullName());
+        
+        if (!checkBothFields(userProfile.getEmailAddress(), userDto.getEmailAddress()))
+        	userProfile.setEmailAddress(userDto.getEmailAddress());
+        
+        if (!checkBothFields(userProfile.getPhoneNumber(), userDto.getPhoneNumber()))
+        	userProfile.setPhoneNumber(userDto.getPhoneNumber());
+        
+        if (!checkBothFields(userProfile.getAadharNumber(), userDto.getAadharNumber()))
+        	userProfile.setAadharNumber(userDto.getAadharNumber());
+        
+        if (!checkBothFields(userProfile.getUserAddress(), userDto.getUserAddress()))
+        	userProfile.setUserAddress(userDto.getUserAddress());
+
+        if (!checkBothFields(userProfile.getPassword(), userDto.getPassword())) {
+        	String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+        	userProfile.setPassword(encodedPassword);
+        }
+        	
         
         UserProfile updatedUserProfile = userRepository.save(userProfile);
         
@@ -153,6 +173,12 @@ public class UserServiceImpl implements UserService {
 		List<UserProfile> users = userRepository.getProfileBySearchedKeyword(keyword);
 		
 		return sendListUserDTOResponse(users);
+	}
+	
+	private Boolean checkBothFields(String s1, String s2) {
+		if (s1.equals(s2))
+				return true;
+		return false;
 	}
 }
 

@@ -17,10 +17,12 @@ import com.vivekghosh.springboottutorials.Exceptions.BlogAPIException;
 import com.vivekghosh.springboottutorials.Exceptions.ResourceNotFoundException;
 import com.vivekghosh.springboottutorials.Security.JwtTokenProvider;
 import com.vivekghosh.springboottutorials.Services.Helpers.MappingEntities;
+import com.vivekghosh.springboottutorials.dao.LoginLogRepository;
 import com.vivekghosh.springboottutorials.dao.RoleRepository;
 import com.vivekghosh.springboottutorials.dao.UserRepository;
 import com.vivekghosh.springboottutorials.dto.LoginDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
+import com.vivekghosh.springboottutorials.entities.LoginLog;
 import com.vivekghosh.springboottutorials.entities.Role;
 import com.vivekghosh.springboottutorials.entities.UserProfile;
 
@@ -32,6 +34,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
     private UserRepository userRepository;
+	
+	@Autowired
+    private LoginLogRepository loginLogRepository;
 	
 	@Autowired
     private RoleRepository roleRepository;
@@ -55,7 +60,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		String token = null;
 		
 		try {
+			
 			String searchParam = loginDto.getUsernameOrEmail();
+			
 			UserProfile user = userRepository.findByUserNameOrEmailAddress(searchParam, searchParam)
 				.orElseThrow(() -> new ResourceNotFoundException("UserProfile", searchParam)
 			);
@@ -69,6 +76,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 				token = jwtTokenProvider.generateToken(authentication);
 				
+				if (token != null) {
+					LoginLog loginLog = new LoginLog();
+					loginLog.setUser(user);
+					loginLogRepository.save(loginLog);
+				}
 				return token;
 			} 
 		} catch (Exception e) {
