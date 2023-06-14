@@ -1,8 +1,13 @@
 package com.vivekghosh.springboottutorials.entities;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 import javax.persistence.*;
+
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,6 +48,13 @@ public class UserProfile {
 	
 	@Column(unique = true, name = "aadhar_number", nullable = false)
 	private String aadharNumber;
+	
+	@CreatedDate
+    private Date activeSince = new Date();
+	
+	@UpdateTimestamp
+	@Column(name = "last_profile_updated")
+	private LocalDateTime lastProfileUpdated;
 	
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
     @JoinTable(name = "user_profile_roles",

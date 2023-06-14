@@ -1,5 +1,9 @@
 package com.vivekghosh.springboottutorials;
 
+import java.util.TimeZone;
+
+import javax.annotation.PostConstruct;
+
 import org.modelmapper.ModelMapper;
 
 import org.springframework.boot.SpringApplication;
@@ -16,7 +20,13 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @SpringBootApplication
 @EnableSwagger2
 public class SpringboottutorialsApplication {
-
+	
+	@PostConstruct
+    public void init(){
+      // Setting Spring Boot SetTimeZone
+      TimeZone.setDefault(TimeZone.getTimeZone("IST"));
+    }
+	
 	@Bean
 	public ModelMapper modelMapper(){
 		return new ModelMapper();
