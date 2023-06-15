@@ -124,7 +124,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserDTO getProfileByUserName(String user_name) {
-		UserProfile user = userRepository.findByUserName(user_name);
+		UserProfile user = userRepository.findByUserName(user_name).orElseThrow(() -> new ResourceNotFoundException("UserProfile", user_name));
 		
 		return sendUserDTOResponse(user);
 	}
@@ -132,14 +132,14 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDTO getProfileByEmailAddress(String email) {
 		
-		UserProfile user = userRepository.findByEmailAddress(email);
+		UserProfile user = userRepository.findByEmailAddress(email).orElseThrow(() -> new ResourceNotFoundException("UserProfile", email));
 		
 		return sendUserDTOResponse(user);
 	}
 
 	@Override
 	public UserDTO getProfileByAadharNumber(String adhaar_number) {
-		UserProfile user = userRepository.findByAadharNumber(adhaar_number);
+		UserProfile user = userRepository.findByAadharNumber(adhaar_number).orElseThrow(() -> new ResourceNotFoundException("UserProfile", adhaar_number));
 		
 		return sendUserDTOResponse(user);
 	}
@@ -157,10 +157,11 @@ public class UserServiceImpl implements UserService {
 	public UserDTO updateUserProfile(UserDTO userDto, Long id) {
 		
 		Boolean isUpdated = false;
-		
+
+		// get post by id from the database
+        UserProfile userProfile = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        
 		try {
-			// get post by id from the database
-	        UserProfile userProfile = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 	        
 	        if (userProfile != null) {
 	        
@@ -231,10 +232,10 @@ public class UserServiceImpl implements UserService {
 	public GenericPayload updateUserPassword(PasswordDTO passwordDTO, Long id) {
 		
 		GenericPayload response = new GenericPayload();
+
+		UserProfile user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("UserProfile", "id", id));
 		
 		try {
-			
-			UserProfile user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("UserProfile", "id", id));
 			
 			if (user != null) {
 				
