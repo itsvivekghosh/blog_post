@@ -6,7 +6,9 @@ package com.vivekghosh.springboottutorials.Services.Helpers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.vivekghosh.springboottutorials.dto.PostDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
+import com.vivekghosh.springboottutorials.entities.Post;
 import com.vivekghosh.springboottutorials.entities.UserProfile;
 
 
@@ -15,8 +17,8 @@ public class MappingEntities {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
-	// convert Entity into DTO
-    public UserDTO mapToDTO(UserProfile user) {
+	// convert User Profile Entity into User Profile DTO
+    public UserDTO mapUserProfileToUserProfileDTO(UserProfile user) {
 
         UserDTO userDto = new UserDTO();
         
@@ -37,8 +39,8 @@ public class MappingEntities {
         return userDto;
     }
 
-    // convert DTO to entity
-    public UserProfile mapToEntity(UserDTO userDto) {
+    // convert User Profile DTO to User Entity
+    public UserProfile mapUserProfileDTOToUserProfileEntity(UserDTO userDto) {
     	
     	UserProfile user = new UserProfile();
         
@@ -52,5 +54,37 @@ public class MappingEntities {
         user.setPassword(userDto.getPassword());
         
         return user;
+    }
+    
+    public Post mapPostDTOToPostEntity(PostDTO postDto) {
+    	
+    	Post post = new Post();
+    	
+    	post.setPostTitle(postDto.getPostTitle());
+    	post.setPostContent(postDto.getPostContent());
+    	post.setPostDescription(postDto.getPostDescription());
+    	
+    	return post;
+    	
+    }
+    
+    
+    public PostDTO mapPostEntityToPostDTO(Post post) {
+    	
+    	PostDTO postDto = new PostDTO();
+
+    	postDto.setId(post.getPostId());
+    	postDto.setPostTitle(post.getPostTitle());
+    	postDto.setPostContent(post.getPostContent());
+    	postDto.setPostDescription(post.getPostDescription());
+    	postDto.setPostLikes(post.getPostLikes());
+    	postDto.setPostCreatedAt(post.getPostCreatedAt());
+    	postDto.setIsUpdated(post.getIsUpdated());
+    	postDto.setPostUpdatedAt(post.getPostUpdatedAt());
+    	postDto.setUserId(post.getUserProfile().getUserProfileId());
+    	postDto.setUserName(post.getUserProfile().getUserName());
+    	
+    	return postDto;
+    	
     }
 }

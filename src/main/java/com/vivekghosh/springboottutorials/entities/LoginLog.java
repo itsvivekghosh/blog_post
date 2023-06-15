@@ -1,6 +1,5 @@
 package com.vivekghosh.springboottutorials.entities;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.persistence.CascadeType;

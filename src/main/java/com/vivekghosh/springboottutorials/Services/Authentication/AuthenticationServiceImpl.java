@@ -137,7 +137,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	        user.setRoles(roles);
 	        
 	        UserProfile newUser = userRepository.save(user);
-			userResponse = mappingEntities.mapToDTO(newUser);
+			userResponse = mappingEntities.mapUserProfileToUserProfileDTO(newUser);
 			
 		} catch (Exception e) {
 			System.err.println(e);

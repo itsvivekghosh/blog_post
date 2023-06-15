@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 
+import com.vivekghosh.springboottutorials.Payloads.GenericPayload;
+import com.vivekghosh.springboottutorials.dto.PasswordDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
 
 public interface UserService {
@@ -21,7 +23,9 @@ public interface UserService {
 	public UserDTO getProfileByAadharNumber(String adhaar_number);
 	
 	public UserDTO updateUserProfile(UserDTO userDto, Long id);
-
+	
+	public GenericPayload updateUserPassword(PasswordDTO passwordDTO, Long id);
+	
 	public UserDTO deleteUserProfile(Long id);
 	
 	public List<UserDTO> getProfileBySearchedKeyword(String keyword);

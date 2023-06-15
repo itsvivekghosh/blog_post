@@ -20,12 +20,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.vivekghosh.springboottutorials.Payloads.GenericPayload;
 import com.vivekghosh.springboottutorials.Services.UserProfile.UserService;
+import com.vivekghosh.springboottutorials.dto.PasswordDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
 
 
 @RestController
-@RequestMapping("/user_profile")
+@RequestMapping("/api/v1/user_profile")
 public class UserController {
 	
 	@Autowired
@@ -84,6 +86,14 @@ public class UserController {
 
        return new ResponseEntity<UserDTO>(
     		   userService.updateUserProfile(userDto, id), HttpStatus.OK
+	   );
+    }
+	
+	@PutMapping("/{id}/update_password_")
+    public ResponseEntity<GenericPayload> updateUserPassword(@PathVariable(name = "id") Long id, @RequestBody PasswordDTO passwordDTO){
+
+       return new ResponseEntity<GenericPayload>(
+    		   userService.updateUserPassword(passwordDTO, id), HttpStatus.OK
 	   );
     }
 	
