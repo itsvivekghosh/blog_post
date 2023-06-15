@@ -52,11 +52,13 @@ public class UserProfile {
 	@CreatedDate
     private Date activeSince = new Date();
 	
-	@UpdateTimestamp
 	@Column(name = "last_profile_updated")
 	private LocalDateTime lastProfileUpdated;
+
+	@Column(name = "last_password_updated")
+	private LocalDateTime lastPasswordUpdated;
 	
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "user_profile_roles",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id")
             ,inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "role_id")

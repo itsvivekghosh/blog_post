@@ -80,7 +80,8 @@ public class SecurityConfigs {
 	        .exceptionHandling().authenticationEntryPoint(authenticationEntryPoint).and()
 	        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 	        .authorizeRequests().antMatchers("/api/auth/**").permitAll() 
-	        .antMatchers("/api/test/**").permitAll() // permit the class of test
+	        .antMatchers("/api/v1/auth/**").permitAll() // permit the class of test
+	        .antMatchers("/api/v1/post/**").permitAll() // permit the class of test
 	        .antMatchers("/**").permitAll() // permit all the routers after swagger-ui.html
 	        .anyRequest().authenticated();
 

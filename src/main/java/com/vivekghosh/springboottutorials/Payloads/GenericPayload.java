@@ -12,7 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 public class GenericPayload {
 	
-    private Date timestamp;
+    private Date timestamp = new Date();
     private String message;
     private HttpStatus status;
     

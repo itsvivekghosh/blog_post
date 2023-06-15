@@ -1,5 +1,6 @@
 package com.vivekghosh.springboottutorials.Services.UserProfile;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,12 +13,16 @@ import org.springframework.stereotype.Service;
 
 import com.vivekghosh.springboottutorials.Exceptions.BlogAPIException;
 import com.vivekghosh.springboottutorials.Exceptions.ResourceNotFoundException;
+import com.vivekghosh.springboottutorials.Payloads.GenericPayload;
 import com.vivekghosh.springboottutorials.Services.Helpers.MappingEntities;
 import com.vivekghosh.springboottutorials.dao.RoleRepository;
 import com.vivekghosh.springboottutorials.dao.UserRepository;
+import com.vivekghosh.springboottutorials.dto.PasswordDTO;
+import com.vivekghosh.springboottutorials.dto.PostDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
 import com.vivekghosh.springboottutorials.entities.Role;
 import com.vivekghosh.springboottutorials.entities.UserProfile;
+import com.vivekghosh.springboottutorials.utils.BlogUtils;
 
 @Service("userService")
 public class UserServiceImpl implements UserService {
@@ -32,57 +37,81 @@ public class UserServiceImpl implements UserService {
 	@Autowired
     private PasswordEncoder passwordEncoder;
 	
-	MappingEntities mappingEntities;
+	private MappingEntities mappingEntities;
+	
+	private BlogUtils blogUtils;
 	
 	public UserServiceImpl() {
-		mappingEntities = new MappingEntities();
+		this.mappingEntities = new MappingEntities();
+		this.blogUtils = new BlogUtils();
 	}
 	
 	private UserDTO sendUserDTOResponse(UserProfile user) {
 		
 		// convert entity to DTO
-        UserDTO userResponse = mappingEntities.mapToDTO(user);
+        UserDTO userResponse = mappingEntities.mapUserProfileToUserProfileDTO(user);
         return userResponse;
 	}
 	
 	private UserProfile sendUserProfileFromUserProfileDTOResponse(UserDTO userDto) {
 		
 		// convert entity to DTO
-        UserProfile userResponse = mappingEntities.mapToEntity(userDto);
+        UserProfile userResponse = mappingEntities.mapUserProfileDTOToUserProfileEntity(userDto);
         return userResponse;
 	}
 	
 	private List<UserDTO> sendListUserDTOResponse(List<UserProfile> listUsers) {
 
 		// convert List entity to List DTO
-		List<UserDTO> userDTOList = listUsers.stream().map(user -> mappingEntities.mapToDTO(user)).collect(Collectors.toList());
+		List<UserDTO> userDTOList = listUsers.stream().map(user -> mappingEntities.mapUserProfileToUserProfileDTO(user)).collect(Collectors.toList());
 		
 		return userDTOList;
 	}
 	
 	@Override
 	public UserDTO createUserProfile(UserDTO userDto) {
-		
-		if(userRepository.existsByUserName(userDto.getUserName())) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "User Name is already exists!.");
-        }
 
-        // add check for email exists in database
-        if(userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email Address is already exists!.");
-        }
-        
-		// convert DTO to entity
-		UserProfile user = mappingEntities.mapToEntity(userDto);
+		UserDTO userResponse =  null;
+		UserProfile user = new UserProfile();
 		
-		Set<Role> roles = new HashSet<Role>();
-        Role userRole = roleRepository.findByName("ROLE_USER").get();
-        roles.add(userRole);
-        user.setRoles(roles);
+		try {
+			if(userRepository.existsByUserName(userDto.getUserName())) {
+	            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "User Name is already exists!.");
+	        }
+	
+	        // add check for email exists in database
+	        if(userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
+	            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email Address is already exists!.");
+	        }
+	        
+			// convert DTO to entity
+	        user.setUserProfileId(userDto.getUserProfileId());
+	        user.setUserName(userDto.getUserName());
+	        user.setFullName(userDto.getFullName());
+	        user.setEmailAddress(userDto.getEmailAddress());
+	        user.setPhoneNumber(userDto.getPhoneNumber());
+	        user.setAadharNumber(userDto.getAadharNumber());
+	        user.setUserAddress(userDto.getUserAddress());
+	        
+	        
+	        // saving the encoded password in DB
+	        String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+	        user.setPassword(encodedPassword);
+	        
+			Set<Role> roles = new HashSet<Role>();
+	        Role userRole = roleRepository.findByName("ROLE_USER").get();
+	        roles.add(userRole);
+	        user.setRoles(roles);
+	        
+	        UserProfile newUser = userRepository.save(user);
+			userResponse = mappingEntities.mapUserProfileToUserProfileDTO(newUser);
+			
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+		
+        return userResponse;
         
-        UserProfile newUser = userRepository.save(user);
-
-        return sendUserDTOResponse(newUser);
 	}
 
 	@Override
@@ -119,7 +148,7 @@ public class UserServiceImpl implements UserService {
 	public List<UserDTO> getAllUserProfiles() {
 		List<UserProfile> listUsers = userRepository.findAll();
 		
-		List<UserDTO> userDTOList = listUsers.stream().map(user -> mappingEntities.mapToDTO(user)).collect(Collectors.toList());
+		List<UserDTO> userDTOList = listUsers.stream().map(user -> mappingEntities.mapUserProfileToUserProfileDTO(user)).collect(Collectors.toList());
 
 		return userDTOList;
 	}
@@ -127,36 +156,59 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDTO updateUserProfile(UserDTO userDto, Long id) {
 		
-		// get post by id from the database
-        UserProfile userProfile = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        
-        if (!checkBothFields(userProfile.getUserName(), userDto.getUserName()))
-        	userProfile.setUserName(userDto.getUserName());
-        
-        if (!checkBothFields(userProfile.getFullName(), userDto.getFullName()))
-        	userProfile.setFullName(userDto.getFullName());
-        
-        if (!checkBothFields(userProfile.getEmailAddress(), userDto.getEmailAddress()))
-        	userProfile.setEmailAddress(userDto.getEmailAddress());
-        
-        if (!checkBothFields(userProfile.getPhoneNumber(), userDto.getPhoneNumber()))
-        	userProfile.setPhoneNumber(userDto.getPhoneNumber());
-        
-        if (!checkBothFields(userProfile.getAadharNumber(), userDto.getAadharNumber()))
-        	userProfile.setAadharNumber(userDto.getAadharNumber());
-        
-        if (!checkBothFields(userProfile.getUserAddress(), userDto.getUserAddress()))
-        	userProfile.setUserAddress(userDto.getUserAddress());
-
-        if (!checkBothFields(userProfile.getPassword(), userDto.getPassword())) {
-        	String encodedPassword = passwordEncoder.encode(userDto.getPassword());
-        	userProfile.setPassword(encodedPassword);
-        }
-        	
-        
-        UserProfile updatedUserProfile = userRepository.save(userProfile);
-        
-        return sendUserDTOResponse(updatedUserProfile);
+		Boolean isUpdated = false;
+		
+		try {
+			// get post by id from the database
+	        UserProfile userProfile = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+	        
+	        if (userProfile != null) {
+	        
+		        if (!blogUtils.checkBothFields(userProfile.getUserName(), userDto.getUserName())) {
+		        	userProfile.setUserName(userDto.getUserName());
+			        isUpdated = true;
+				}
+		        if (!blogUtils.checkBothFields(userProfile.getFullName(), userDto.getFullName())) {
+		        	userProfile.setFullName(userDto.getFullName());
+		        	isUpdated = true;
+				}
+		        
+		        if (!blogUtils.checkBothFields(userProfile.getEmailAddress(), userDto.getEmailAddress())) {
+		        	userProfile.setEmailAddress(userDto.getEmailAddress());
+		        	isUpdated = true;
+		        }
+		        
+		        if (!blogUtils.checkBothFields(userProfile.getPhoneNumber(), userDto.getPhoneNumber())) {
+		        	userProfile.setPhoneNumber(userDto.getPhoneNumber());
+		        	isUpdated = true;
+		        }
+		        
+		        if (!blogUtils.checkBothFields(userProfile.getAadharNumber(), userDto.getAadharNumber())) {
+		        	userProfile.setAadharNumber(userDto.getAadharNumber());
+		        	isUpdated = true;
+		        }
+		        
+		        if (!blogUtils.checkBothFields(userProfile.getUserAddress(), userDto.getUserAddress())) {
+		        	userProfile.setUserAddress(userDto.getUserAddress());
+		        	isUpdated = true;
+				}
+		        
+	        }
+	        
+	        if (isUpdated == true) {  
+	        	userProfile.setLastProfileUpdated(LocalDateTime.now());
+				UserProfile updatedUserProfile = userRepository.save(userProfile);
+	
+		        return sendUserDTOResponse(updatedUserProfile);
+	        } 
+	        
+	        return sendUserDTOResponse(userProfile);
+	        
+		} catch (Exception e) {
+			System.err.println("Excetion occurred while updating profile, Error: " + e.getMessage());
+		}
+		
+		return userDto;
 	}
 
 	@Override
@@ -174,12 +226,46 @@ public class UserServiceImpl implements UserService {
 		
 		return sendListUserDTOResponse(users);
 	}
-	
-	private Boolean checkBothFields(String s1, String s2) {
-		if (s1.equals(s2))
-				return true;
-		return false;
+
+	@Override
+	public GenericPayload updateUserPassword(PasswordDTO passwordDTO, Long id) {
+		
+		GenericPayload response = new GenericPayload();
+		
+		try {
+			
+			UserProfile user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("UserProfile", "id", id));
+			
+			if (user != null) {
+				
+				if (!passwordEncoder.matches(passwordDTO.getPassword(), user.getPassword())) {
+				
+					user.setPassword(passwordEncoder.encode(passwordDTO.getPassword()));
+					user.setLastPasswordUpdated(LocalDateTime.now());
+					
+					userRepository.save(user);
+					
+					response.setMessage("Password changed successfully!");
+					response.setStatus(HttpStatus.OK);
+					
+					return response;
+				} else {
+					
+					response.setMessage("New Password is same as the last password, type a new password!");
+					response.setStatus(HttpStatus.NOT_MODIFIED);
+					
+					return response;
+					
+				}
+			}
+			
+		} catch (Exception e) {
+			System.err.println("Error occurred while changing password, Error: " + e.getMessage());
+		} 
+		
+		return response;
 	}
+	
 }
 
 /*
@@ -189,7 +275,7 @@ public class UserServiceImpl implements UserService {
   "phoneNumber": 6396474255,
   "emailAddress": "soapmactevis1@gmail.com",
   "fullName": "Vivek Kumar Ghosh",
-  "userName": "itsvivekghosh"
+  "userName": "itsvivekghosh",
   "password": "Vivek@1999"
 }
  * */
