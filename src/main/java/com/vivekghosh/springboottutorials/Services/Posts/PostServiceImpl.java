@@ -77,6 +77,7 @@ public class PostServiceImpl implements PostService {
 		Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 		
 		if (post != null) {
+			
 			postDto = mappingEntities.mapPostEntityToPostDTO(post);
 			
 			return postDto;
@@ -177,32 +178,28 @@ public class PostServiceImpl implements PostService {
 
 		Post post = postRepository.findById(post_id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", post_id));
 		
+		UserProfile user = userRepository.findById(postLikeDto.getUserId()).orElseThrow(
+			() -> new ResourceNotFoundException("UserProfile", "ID", postLikeDto.getUserId())
+		);
+	
 		try {
 			
-			if (post != null) {
+			if (post != null && user != null) {
 				
-				UserProfile user = userRepository.findById(postLikeDto.getUserId()).orElseThrow(
-					() -> new ResourceNotFoundException("UserProfile", "ID", postLikeDto.getUserId())
-				);
+				Set<UserProfile> postLikedUsers = post.getPostLikedUsers();
 				
-				
-				if (user != null) {
-					
-					Set<UserProfile> postLikedUsers = post.getPostLikedUsers();
-					
-					// if the user is not liked the 
-					// post then increase the like by 1;
-					if (!checkIfTheUserAlreadyLiked(postLikeDto.getUserId(), postLikedUsers)) {
-						post.setPostLikes(post.getPostLikes() + 1);
-					}
-					
-					postLikedUsers.add(user);
-				
+				// if the user is not liked the 
+				// post then increase the like by 1;
+				if (!checkIfTheUserAlreadyLiked(postLikeDto.getUserId(), postLikedUsers)) {
+					post.setPostLikes(post.getPostLikes() + 1);
 				}
 				
-				postRepository.save(post);
+				postLikedUsers.add(user);
 				
-				return mappingEntities.mapPostEntityToPostDTO(post);
+				
+				Post newPost = postRepository.save(post);
+				
+				return mappingEntities.mapPostEntityToPostDTO(newPost);
 			}
 			
 			
@@ -212,7 +209,7 @@ public class PostServiceImpl implements PostService {
 			); 
 		}
 		
-		return null;
+		return mappingEntities.mapPostEntityToPostDTO(post);
 	}
 	
 	Boolean checkIfTheUserAlreadyLiked(Long user_id, Set<UserProfile> likedUsers) {

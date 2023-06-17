@@ -58,7 +58,7 @@ public class UserProfile {
 	@Column(name = "last_password_updated")
 	private LocalDateTime lastPasswordUpdated;
 	
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.REFRESH})
     @JoinTable(name = "user_profile_roles",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id")
             ,inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "role_id")

@@ -1,8 +1,7 @@
 package com.vivekghosh.springboottutorials.entities;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -53,15 +52,15 @@ public class Post {
     )
     private UserProfile userProfile;
     
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "post_liked_users",
             joinColumns = @JoinColumn(name = "post_id", referencedColumnName = "post_id")
             ,inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     )
     private Set<UserProfile> postLikedUsers;
     
-    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
-    private java.util.Collection<Comment> comments;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Collection<Comment> comments;
     
     public Post() {
     	this.postLikes = 0l;

@@ -56,7 +56,9 @@ public class CommentServiceImpl implements CommentService {
 			comment.setPost(post);
 			comment.setUserProfile(user);
 			
-			return mappingEntities.mapCommentEntityToCommentDTO(commentRepository.save(comment));
+//			Comment newComment = commentRepository.save(comment);
+			
+			return mappingEntities.mapCommentEntityToCommentDTO(comment);
 			
 		} catch (Exception e) {
 			System.err.println("Error occurred while saving/creating the comment, Error: "+ e.getMessage());

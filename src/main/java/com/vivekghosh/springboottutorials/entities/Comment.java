@@ -1,7 +1,11 @@
 package com.vivekghosh.springboottutorials.entities;
 
+import java.util.Date;
+
 import javax.persistence.*;
 import javax.validation.constraints.*;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import lombok.*;
 
@@ -23,20 +27,21 @@ public class Comment {
 	
 	@NotBlank
 	@Column(name = "comment_body")
-	@Size(min = 10, message = "Comment body must be minimum 10 characters")
+	@Size(min = 1, message = "Comment body must be minimum 1 characters")
 	private String commentBody;
 	
-//	@ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "post_id", nullable = false)
-//    private Post post;
-	
 	@NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", referencedColumnName = "post_id", nullable = false)
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserProfile userProfile;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "comment_created_date", nullable = false, updatable = false)
+    @CreationTimestamp
+    private Date commentCreatedDate = new Date();
     
 }

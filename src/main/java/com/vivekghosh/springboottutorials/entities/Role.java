@@ -1,6 +1,5 @@
 package com.vivekghosh.springboottutorials.entities;
 
-import javax.*;
 import javax.persistence.*;
 
 import lombok.*;
