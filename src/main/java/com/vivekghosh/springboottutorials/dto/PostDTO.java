@@ -1,15 +1,15 @@
 package com.vivekghosh.springboottutorials.dto;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
 
-import javax.persistence.Column;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.UpdateTimestamp;
-
-import com.vivekghosh.springboottutorials.entities.UserProfile;
+import com.vivekghosh.springboottutorials.utils.LikedUser;
+import com.vivekghosh.springboottutorials.utils.PostComment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -64,4 +64,11 @@ public class PostDTO {
 
     @Schema(description = "User Name of the Blog Post")
     private String userName;
+    
+    @Schema(description = "Post Liked Users List")
+    private Set<LikedUser> postLikedUsers;
+    
+    @Schema(description = "Post Comments List")
+    private Collection<PostComment> postComments;
 }
+

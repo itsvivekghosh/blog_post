@@ -15,11 +15,11 @@ import com.vivekghosh.springboottutorials.entities.UserProfile;
 @Repository
 public interface UserRepository extends JpaRepository<UserProfile, Long> {
 	
-	public UserProfile findByUserName(String user_name);
+	public Optional<UserProfile> findByUserName(String user_name);
 	
-	public UserProfile findByAadharNumber(String adhaar_number);
+	public Optional<UserProfile> findByAadharNumber(String adhaar_number);
 	
-	public UserProfile findByEmailAddress(String email);
+	public Optional<UserProfile> findByEmailAddress(String email);
 	
 	public Optional<UserProfile> findByUserNameOrEmailAddress(String userName, String email);
 

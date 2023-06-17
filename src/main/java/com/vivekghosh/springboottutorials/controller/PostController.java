@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vivekghosh.springboottutorials.Payloads.GenericPayload;
 import com.vivekghosh.springboottutorials.Services.Posts.PostService;
 import com.vivekghosh.springboottutorials.dto.PostDTO;
+import com.vivekghosh.springboottutorials.dto.PostLikeDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
 
 
@@ -44,10 +45,22 @@ public class PostController {
 	}
 	
 	@PutMapping(path="/{id}")
-	public ResponseEntity<PostDTO> updatePostById(@Valid @RequestBody PostDTO postDto, @PathVariable(name = "id") Long id) {
+	public ResponseEntity<PostDTO> updatePostById(
+			@Valid @RequestBody PostDTO postDto,
+			@PathVariable(name = "id") Long id) {
 		
 		return new ResponseEntity<PostDTO>(
 				postService.updatedPostById(id, postDto), HttpStatus.OK
+		);
+	}
+	
+	@PutMapping(path="/{post_id}/like_post_")
+	public ResponseEntity<PostDTO> likePostByPostId(
+			@Valid @RequestBody PostLikeDTO postLikeDto, 
+			@PathVariable(name = "post_id") Long post_id) {
+		
+		return new ResponseEntity<PostDTO>(
+				postService.likePostByPostId(post_id, postLikeDto), HttpStatus.OK
 		);
 	}
 	

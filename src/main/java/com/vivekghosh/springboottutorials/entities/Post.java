@@ -1,7 +1,7 @@
 package com.vivekghosh.springboottutorials.entities;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -14,10 +14,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @Entity
-@Table(
-        name = "posts"
-//        ,uniqueConstraints = {@UniqueConstraint(columnNames = {"title"})}
-)
+@Table( name = "posts" )
 public class Post {
 
     @Id
@@ -47,12 +44,6 @@ public class Post {
     @Column(name = "post_updated_time", nullable = true)
     private LocalDateTime postUpdatedAt;
     
-//    @NotNull
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-//	private UserProfile userProfile;
-    
-    
     @NotNull
     @ManyToOne
     @JoinTable(name = "user_posts",
@@ -61,6 +52,15 @@ public class Post {
     )
     private UserProfile userProfile;
     
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @JoinTable(name = "post_liked_users",
+            joinColumns = @JoinColumn(name = "post_id", referencedColumnName = "post_id")
+            ,inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    )
+    private Set<UserProfile> postLikedUsers;
+    
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Collection<Comment> comments;
     
     public Post() {
     	this.postLikes = 0l;

@@ -3,13 +3,19 @@
  */
 package com.vivekghosh.springboottutorials.Services.Helpers;
 
+import java.util.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.vivekghosh.springboottutorials.dto.CommentDTO;
 import com.vivekghosh.springboottutorials.dto.PostDTO;
 import com.vivekghosh.springboottutorials.dto.UserDTO;
+import com.vivekghosh.springboottutorials.entities.Comment;
 import com.vivekghosh.springboottutorials.entities.Post;
 import com.vivekghosh.springboottutorials.entities.UserProfile;
+import com.vivekghosh.springboottutorials.utils.LikedUser;
+import com.vivekghosh.springboottutorials.utils.PostComment;
 
 
 public class MappingEntities {
@@ -84,7 +90,57 @@ public class MappingEntities {
     	postDto.setUserId(post.getUserProfile().getUserProfileId());
     	postDto.setUserName(post.getUserProfile().getUserName());
     	
+    	Set<UserProfile> postLikedUsers = post.getPostLikedUsers();
+    	Set<LikedUser> likedUsers = new HashSet<>();
+    	if (postLikedUsers != null) {
+
+        	
+	    	postLikedUsers.forEach(user -> {
+	    		
+	    		LikedUser likedUser = new LikedUser();
+	    		likedUser.setUserId(user.getUserProfileId());
+	    		likedUser.setUserName(user.getUserName());
+	    		
+	    		likedUsers.add(likedUser);
+	    	});
+	    	
+    	}
+    	postDto.setPostLikedUsers(likedUsers);
+    	
+    	Collection<Comment> comments = post.getComments();
+		Set<PostComment> postComments = new HashSet<PostComment>();
+    	if (comments != null) {
+    		
+    		
+    		comments.forEach(comment -> {
+    			
+    			PostComment postComment = new PostComment();
+    			postComment.setCommentId(comment.getCommentId());
+    			postComment.setCommentBody(comment.getCommentBody());
+    			postComment.setCommentUserId(comment.getUserProfile().getUserProfileId());
+    			postComment.setCommentUserName(comment.getUserProfile().getUserName());
+    			
+        		postComments.add(postComment);
+        		
+    		});
+    		
+    	}
+
+		postDto.setPostComments(postComments);
+		
     	return postDto;
+    	
+    }
+    
+    public CommentDTO mapCommentEntityToCommentDTO(Comment comment) {
+    	
+    	CommentDTO commentDTO = new CommentDTO();
+    	commentDTO.setCommentBody(comment.getCommentBody());
+    	commentDTO.setCommentId(comment.getCommentId());
+    	commentDTO.setUserId(comment.getUserProfile().getUserProfileId());
+    	commentDTO.setUserName(comment.getUserProfile().getUserName());
+    	
+    	return commentDTO;
     	
     }
 }

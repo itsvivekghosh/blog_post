@@ -2,6 +2,8 @@ package com.vivekghosh.springboottutorials.Services.Posts;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,9 +15,11 @@ import com.vivekghosh.springboottutorials.Services.Helpers.MappingEntities;
 import com.vivekghosh.springboottutorials.dao.PostRepository;
 import com.vivekghosh.springboottutorials.dao.UserRepository;
 import com.vivekghosh.springboottutorials.dto.PostDTO;
+import com.vivekghosh.springboottutorials.dto.PostLikeDTO;
 import com.vivekghosh.springboottutorials.entities.Post;
 import com.vivekghosh.springboottutorials.entities.UserProfile;
 import com.vivekghosh.springboottutorials.utils.BlogUtils;
+import com.vivekghosh.springboottutorials.utils.LikedUser;
 
 
 @Service("postService")
@@ -40,7 +44,7 @@ public class PostServiceImpl implements PostService {
 	
 	@Override
 	public PostDTO createPost(PostDTO postDto) {
-
+		
 		try {
 			
 			Post post = mappingEntities.mapPostDTOToPostEntity(postDto);
@@ -61,7 +65,8 @@ public class PostServiceImpl implements PostService {
 		} catch (Exception e) {
 			System.err.println("Error Occurred while creating Post, Error:: "+ e.getMessage());
 		}
-		return null;
+		
+		return postDto;
 	}
 
 	@Override
@@ -69,28 +74,27 @@ public class PostServiceImpl implements PostService {
 		
 		PostDTO postDto = new PostDTO();
 		
-		try {
+		Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+		
+		if (post != null) {
 			
-			Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+			postDto = mappingEntities.mapPostEntityToPostDTO(post);
 			
-			if (post != null) {
-				postDto = mappingEntities.mapPostEntityToPostDTO(post);
-				
-				return postDto;
-			}
-			
-		} catch (Exception e) {
-			System.err.println("Error Occurred while fetching the post by ID: Post, Error:: "+ e.getMessage());
+			return postDto;
 		}
+		
 		return postDto;
 	}
 
 
 	@Override
 	public PostDTO updatedPostById(Long id, PostDTO postDto) {
+		
+		Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+		
 		try {
+			
 			Boolean isUpdated = false;
-			Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 			
 			if (post != null) {
 				
@@ -145,9 +149,11 @@ public class PostServiceImpl implements PostService {
 	public GenericPayload deleteUserPostById(Long id) {
 		
 		GenericPayload response = new GenericPayload();
+		
+		Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+		
 		try {
 			
-			Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 			
 			if (post != null) {
 				
@@ -165,5 +171,58 @@ public class PostServiceImpl implements PostService {
 		
 		return response;
 	}
+
+
+	@Override
+	public PostDTO likePostByPostId(Long post_id, PostLikeDTO postLikeDto) {
+
+		Post post = postRepository.findById(post_id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", post_id));
+		
+		UserProfile user = userRepository.findById(postLikeDto.getUserId()).orElseThrow(
+			() -> new ResourceNotFoundException("UserProfile", "ID", postLikeDto.getUserId())
+		);
 	
+		try {
+			
+			if (post != null && user != null) {
+				
+				Set<UserProfile> postLikedUsers = post.getPostLikedUsers();
+				
+				// if the user is not liked the 
+				// post then increase the like by 1;
+				if (!checkIfTheUserAlreadyLiked(postLikeDto.getUserId(), postLikedUsers)) {
+					post.setPostLikes(post.getPostLikes() + 1);
+				}
+				
+				postLikedUsers.add(user);
+				
+				
+				Post newPost = postRepository.save(post);
+				
+				return mappingEntities.mapPostEntityToPostDTO(newPost);
+			}
+			
+			
+		} catch (Exception e) {
+			System.err.println(
+				String.format("Error found when liking a post id : `%s` , Error : `%s`", post_id, e.getMessage() )
+			); 
+		}
+		
+		return mappingEntities.mapPostEntityToPostDTO(post);
+	}
+	
+	Boolean checkIfTheUserAlreadyLiked(Long user_id, Set<UserProfile> likedUsers) {
+		
+		if (likedUsers != null && user_id != null) {
+			
+			for (UserProfile user : likedUsers) {
+				if (user.getUserProfileId().equals(user_id)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 }
