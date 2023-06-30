@@ -1,0 +1,351 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define gc getchar_unlocked
+#define fo(i, n) for (int i = 0; i < n; i++)
+#define Fo(i, k, n) for (i = k; k < n ? i < n : i > n; k < n ? i += 1 : i -= 1)
+#define ll long long
+#define deb(x) cout << #x << "=" << x << endl
+#define pb push_back
+#define mp make_pair
+#define F first
+#define S second
+#define all(x) x.begin(), x.end()
+#define clr(x) memset(x, false, sizeof(x))
+#define sortall(x) sort(all(x))
+#define tr(it, a) for (auto it = a.begin(); it != a.end(); it++)
+#define PI 3.1415926535897932384626
+#define MOD 1000000007
+#define MAXX LLONG_MAX
+#define endl '\n'
+#define int long long int
+typedef pair<int, int> pii;
+typedef pair<ll, ll> pl;
+typedef vector<int> vi;
+typedef vector<ll> vl;
+typedef vector<pii> vpii;
+typedef vector<pl> vpl;
+typedef vector<vi> vvi;
+typedef vector<vl> vvl;
+typedef vector<string> vs;
+typedef vector<vs> vss;
+
+
+int w = 1;
+
+class Tree {
+
+    public:
+        bool isLocked;
+        bool isLockable;
+        int id;
+        int ma;
+        Tree* p;
+        vector<Tree *> childrenNodes;
+        string nodeName;
+
+        Tree() {
+            isLocked = false;
+            isLockable = true;
+            id = -1;
+            ma = w++;
+            p = NULL;
+            nodeName = "";
+        }
+
+        Tree(string name) {
+            isLocked = false;
+            isLockable = true;
+            id = -1;
+            ma = w++;
+            p = NULL;
+            nodeName = name;
+        }
+
+        Tree(Tree* parent){
+            isLocked = false;
+            isLockable = true;
+            id = -1;
+            ma = w++;
+            p = parent;
+        }
+
+        Tree(Tree* parent, string name){
+            isLocked = false;
+            isLockable = true;
+            id = -1;
+            ma = w++;
+            p = parent;
+            nodeName = name;
+        }
+};
+
+void Print(Tree *);
+bool locking(Tree* n, int uuid);
+bool unlocking(Tree* n,int uuid);
+
+unordered_map<string, Tree *> stringToTreeMap;
+
+bool locking(Tree* n, int uuid) {
+    if((n->isLockable == false) || (n->isLocked == true)) 
+        return false;
+    Tree* T = n;
+    queue<Tree *> q;
+    q.push(T);
+    while(!q.empty()) {
+
+        Tree *temp = q.front();
+        q.pop();
+        // cout << temp -> nodeName << " -> " ;
+        
+        for(auto x: temp -> childrenNodes) {
+
+            if(x->isLocked) 
+                return false;
+            q.push(x);
+        }
+
+    }
+
+    n->id = uuid;
+    n->isLocked = true;
+    q.push(T);
+    while(!q.empty()) {
+
+        Tree* temp = q.front();
+        q.pop();
+
+        for(auto x: temp->childrenNodes) {
+            x->isLockable = false;
+            q.push(x);
+        }
+    }
+    return true;
+}
+
+bool unlocking(Tree* n, int uuid) {
+
+    if(n->isLockable == false || n -> isLocked == false || (n->isLocked == true && uuid != n->id)) 
+        return false;
+    
+    Tree* T = n;
+    n->isLocked = false;
+    n->id = -1;
+
+    queue<Tree*> q;
+    q.push(T);
+
+    while(!q.empty()) {
+        Tree* temp = q.front();
+        q.pop();
+        for(auto x: temp->childrenNodes){
+            x->isLockable = true;
+            q.push(x);
+        }
+    }
+    return true;
+}
+
+bool update(Tree* n, int uuid) {
+
+    if(n->isLockable == false || n->isLocked == true) 
+        return false;
+    
+    Tree* T = n;
+    queue<Tree *> q;
+    q.push(T);
+    bool flag = false;
+    
+    while(!q.empty()) {
+
+        Tree* temp = q.front();
+        q.pop();
+        
+        for(auto x : temp -> childrenNodes) {
+
+            if(x -> isLocked == true && x -> id != uuid) { 
+                return false; 
+            }
+            if(x -> isLocked) {
+                flag = true;
+            }
+            q.push(x);
+        }
+    }
+    if(!flag) 
+        return false;
+    
+    q.push(T);
+    while(!q.empty()) {
+
+        Tree* temp = q.front();
+        q.pop();
+
+        for(auto x: temp -> childrenNodes) {
+        
+            if(x -> isLocked) {
+                if(!unlocking(x, uuid)) return false;
+            }
+        
+            q.push(x);
+        }
+    }
+
+    return locking(n, uuid);
+}
+
+void Print(Tree *n) {
+    queue<Tree *> q;
+    q.push(n);
+
+    while(!q.empty()) {
+        Tree* temp = q.front();
+        q.pop();
+        for(auto x: temp -> childrenNodes) {
+            cout << temp -> nodeName << " -> " << x -> nodeName << ", ";
+        }
+    }
+    cout << endl;
+}
+
+
+void call() {
+
+    int n, m, q;
+    cin >> n >> m >> q;
+
+    string d;
+    cin >> d;
+    Tree* t = new Tree(d);
+
+    stringToTreeMap[d] = t;
+    queue<Tree *> queue;
+    queue.push(t);
+    int k = 1;
+
+    while(!queue.empty()) {
+
+        auto node = queue.front();
+        queue.pop();
+
+        while (k < n && node -> childrenNodes.size() < m) {
+
+            string s;
+            cin >> s;
+            
+            // Tree* u = new Tree(node);
+            Tree* u = new Tree(node, s);
+            stringToTreeMap[s] = u;
+            node->childrenNodes.push_back(u);
+            queue.push(u);
+            k++;
+        }
+
+        // Print(temp);
+    }
+
+    while (q--) {
+
+        int query, uuid;
+        string name;
+        bool ans;
+        cin >> query >> name >> uuid;
+
+        if(query == 1) {
+            ans = locking(stringToTreeMap[name], uuid);
+        }
+        else if(query == 2) {
+            ans = unlocking(stringToTreeMap[name], uuid);
+        }
+        else {
+            ans = update(stringToTreeMap[name], uuid);
+        }
+        if(ans == true) 
+            cout << "true\n";
+        else 
+            cout << "false\n";
+    }
+
+    return ;
+}
+
+int32_t main() {
+
+    void sync_files_and_os();
+    sync_files_and_os();
+    int t=1;
+    while (t--) {
+        call();
+    }
+
+    return 0;
+
+}
+
+void sync_files_and_os() {
+
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    #ifndef ONLINE_JUDGE
+        freopen("input.txt", "r", stdin);
+        freopen("error.txt", "w", stderr);
+        freopen("output.txt", "w", stdout);
+    #endif
+
+}
+
+
+/*
+
+7 2 6
+World
+Asia
+Africa
+India
+China
+SouthAfrica
+Egypt
+1 China 9
+1 India 9
+3 Asia 9
+2 India 9
+2 China 9
+1 Asia 9
+
+*/
+
+/*
+
+Lock(string X, int id): 
+
+    1. if X is already locked then you cannot lock it, so return false
+
+    2. if any of its descendants is locked, you cannot lock it, so return false
+
+    3. if any of its childrenNodes is locked, you cannot lock it, so return false
+
+    4. If none of the above conditions are met, lock X with id
+
+
+Unlock(string X, int id):
+
+    1. if X is not locked return false
+
+    2. if X is locked by some different id, then return false
+
+    3. otherwise unlock and return true
+
+
+UpgradeLock(string X, int id):
+
+    1. If X is locked return false
+
+    2. If it has no locked Descendents return false
+
+    3. If it has locked descendants by more than one id then return false
+
+    4. If the above condition doesn't satisfy then unlock every locked descendants and lock X
+    
+*/
